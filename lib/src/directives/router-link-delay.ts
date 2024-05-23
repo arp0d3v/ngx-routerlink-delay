@@ -1,4 +1,4 @@
-import { Directive, Input, HostListener, OnDestroy } from '@angular/core';
+import { Directive, Input, HostListener, OnDestroy, Attribute, Renderer2, ElementRef } from '@angular/core';
 import { RouterLinkWithHref, Router, ActivatedRoute } from '@angular/router';
 import { LocationStrategy } from '@angular/common';
 import { timer, SubscriptionLike } from 'rxjs';
@@ -20,12 +20,29 @@ export class RouterLinkWithHrefDelay extends RouterLinkWithHref implements OnDes
 
     private timerSubscription: SubscriptionLike;
 
-    constructor(router: Router, route: ActivatedRoute, locationStrategy: LocationStrategy) {
-        super(router, route, locationStrategy);
+    constructor(router: Router,
+        route: ActivatedRoute,
+        @Attribute('tabindex') tabIndexAttribute: string | null | undefined,
+        renderer2: Renderer2,
+         el: ElementRef,
+         locationStrategy?: LocationStrategy,) {
+        super(router, route, tabIndexAttribute, renderer2, el, locationStrategy);
     }
 
-    @HostListener('click', ['$event.button', '$event.ctrlKey', '$event.metaKey', '$event.shiftKey'])
-    onClick(button: number, ctrlKey: boolean, metaKey: boolean, shiftKey: boolean): boolean {
+    @HostListener('click', [
+        '$event.button',
+        '$event.ctrlKey',
+        '$event.shiftKey',
+        '$event.altKey',
+        '$event.metaKey',
+    ])
+    onClick(
+        button: number,
+        ctrlKey: boolean,
+        shiftKey: boolean,
+        altKey: boolean,
+        metaKey: boolean,
+    ): boolean {
         // clone the checks being made in super()
         if (button !== 0 || ctrlKey || metaKey || shiftKey) {
             return true;
@@ -39,7 +56,7 @@ export class RouterLinkWithHrefDelay extends RouterLinkWithHref implements OnDes
         this.timerSubscription = timer(this.navigationDelay)
             .subscribe(t => {
                 this.timerSubscription.unsubscribe();
-                super.onClick(button, ctrlKey, metaKey, shiftKey);
+                super.onClick(button, ctrlKey, shiftKey, altKey, metaKey);
             });
 
         return false;
